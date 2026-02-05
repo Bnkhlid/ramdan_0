@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>رمضان كريم | القراء</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;400;500;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+
+
+    <script src="js/main.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Force dark background for options to ensure visibility against white text */
+        select option {
+            background-color: #0f172a;
+            /* ramadan-dark */
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body class="bg-ramadan-dark text-white font-tajawal">
+    <div id="nav-placeholder"></div>
+    <section id="reciters" class="py-24 min-h-screen relative overflow-hidden">
+        <!-- Background Elements -->
+        <div class="absolute inset-0 stars opacity-30"></div>
+        <div class="absolute inset-0 islamic-pattern opacity-10"></div>
+
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="text-center mb-8">
+                <span class="text-ramadan-gold text-sm font-bold tracking-wider">استمع إلى القرآن الكريم</span>
+                <h2 class="text-3xl lg:text-5xl font-bold mt-2 font-amiri text-white">قراء القرآن الكريم</h2>
+                <p class="text-gray-400 mt-2">اختر الشيخ و السورة ثم اضغط تشغيل</p>
+
+                <!-- Search -->
+                <div class="max-w-md mx-auto mt-6">
+                    <div class="relative">
+                        <input type="text" id="reciterSearch" onkeyup="filterReciters()" placeholder="ابحث عن قارئ..."
+                            class="w-full p-3 rounded-full bg-white/10 border border-ramadan-gold/30 text-white focus:outline-none focus:border-ramadan-gold pr-10">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="max-w-6xl mx-auto px-2">
+                <!-- Reciters List -->
+                <div id="recitersList"
+                    class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8 reciter-grid max-h-[60vh] overflow-y-auto custom-scrollbar p-2">
+                    <div class="col-span-full text-center py-8">
+                        <div class="loader mx-auto w-8 h-8"></div>
+                        <p class="text-gray-400 mt-4 text-sm">جاري تحميل قائمة القراء المحدثة...</p>
+                    </div>
+                </div>
+
+                <!-- Player Section -->
+                <div id="reciterPlayer"
+                    class="glass-effect rounded-2xl p-6 hidden sticky bottom-4 z-30 bg-ramadan-dark/95 border border-ramadan-gold/20 shadow-2xl backdrop-blur-xl">
+                    <div class="flex flex-col md:flex-row items-center gap-6">
+                        <div
+                            class="hidden md:flex w-20 h-20 rounded-full bg-ramadan-gold/20 items-center justify-center border-2 border-ramadan-gold/30 flex-shrink-0">
+                            <img id="reciterImg" src="" alt="صورة الشيخ" class="w-16 h-16 rounded-full object-cover">
+                        </div>
+
+                        <div class="flex-1 w-full">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="text-right">
+                                    <h4 id="reciterName" class="text-lg font-bold text-ramadan-gold reciter-name">-
+                                    </h4>
+                                    <p id="currentSurahName" class="text-gray-400 text-sm">سورة -</p>
+                                </div>
+                                <button
+                                    onclick="document.getElementById('reciterPlayer').classList.add('hidden'); stopAudio();"
+                                    class="md:hidden text-gray-400 hover:text-white">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+
+                            <div class="flex flex-col md:flex-row gap-4 mb-4">
+                                <div class="flex-1">
+                                    <select id="reciterSelect"
+                                        class="w-full p-2 rounded bg-white/5 border border-ramadan-gold/20 text-sm focus:outline-none focus:border-ramadan-gold"></select>
+                                </div>
+                                <div class="w-full md:w-48">
+                                    <select id="surahSelect"
+                                        class="w-full p-2 rounded bg-white/5 border border-ramadan-gold/20 text-sm focus:outline-none focus:border-ramadan-gold"></select>
+                                </div>
+                            </div>
+
+                            <div
+                                class="flex flex-wrap items-center justify-center md:justify-start gap-4 audio-controls">
+                                <button id="reciterRewindBtn"
+                                    class="w-10 h-10 rounded-full bg-white/10 text-white hover:bg-white/20 hover:text-ramadan-gold transition-all flex items-center justify-center"
+                                    title="إرجاع 5 ثواني">
+                                    <i class="fas fa-forward"></i>
+                                </button>
+
+                                <button id="playReciterBtn"
+                                    class="w-14 h-14 rounded-full bg-ramadan-gold text-ramadan-dark flex items-center justify-center hover:bg-white transition-all shadow-lg shadow-ramadan-gold/20 scale-100 hover:scale-105">
+                                    <i class="fas fa-play text-xl" id="reciterPlayIcon"></i>
+                                </button>
+
+                                <button id="reciterForwardBtn"
+                                    class="w-10 h-10 rounded-full bg-white/10 text-white hover:bg-white/20 hover:text-ramadan-gold transition-all flex items-center justify-center"
+                                    title="تقديم 5 ثواني">
+                                    <i class="fas fa-backward"></i>
+                                </button>
+
+                                <div class="hidden md:flex items-center gap-2 mr-4">
+                                    <span class="text-xs text-gray-400">السرعة:</span>
+                                    <button
+                                        class="rate-btn px-2 py-1 rounded bg-white/5 text-xs hover:bg-ramadan-gold/20"
+                                        data-rate="1">1x</button>
+                                    <button
+                                        class="rate-btn px-2 py-1 rounded bg-white/5 text-xs hover:bg-ramadan-gold/20"
+                                        data-rate="1.5">1.5x</button>
+                                    <button
+                                        class="rate-btn px-2 py-1 rounded bg-white/5 text-xs hover:bg-ramadan-gold/20"
+                                        data-rate="2">2x</button>
+                                </div>
+                            </div>
+
+                            <!-- Progress -->
+                            <div class="mt-4 flex items-center gap-3">
+                                <span id="currentTime" class="text-xs text-gray-400 w-10 text-center">00:00</span>
+                                <div class="flex-1 h-2 bg-white/10 rounded-full cursor-pointer relative group"
+                                    id="progressBarContainer">
+                                    <div id="reciterProgress" class="h-full bg-ramadan-gold rounded-full relative"
+                                        style="width: 0%">
+                                        <div
+                                            class="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow">
+                                        </div>
+                                    </div>
+                                </div>
+                                <span id="durationTime" class="text-xs text-gray-400 w-10 text-center">00:00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="reciterSuraList" class="mt-4 border-t border-white/5 pt-4 hidden md:block">
+                        <p class="text-xs text-gray-400 mb-2">اختيار سريع للسورة:</p>
+                        <div class="grid grid-cols-8 md:grid-cols-12 gap-1 max-h-32 overflow-y-auto px-1 custom-scrollbar"
+                            id="quickSuraGrid">
+                            <!-- Generated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <audio id="reciterAudio" preload="metadata"></audio>
+            </div>
+        </div>
+    </section>
+
+
+    </div>
+
+    </div>
+    <div id="footer-placeholder"></div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            injectNav('reciters');
+            injectFooter();
+            initReciters();
+        });
+
+        // Global Data
+        let allReciters = [];
+        let quranMeta = [];
+        const audio = document.getElementById('reciterAudio');
+
+        function killAudio() {
+            audio.pause();
+            audio.currentTime = 0;
+
+            // 🔥 ده السطر اللي بيحل المشكلة جذريًا
+            audio.removeAttribute("src");
+            audio.load();
+        }
+
+        //  قائمة القراء - محدثة ومحددة ✅
+        const recitersList = [
+            { id: "1", name: "عبد الباسط عبد الصمد", image: "images/abdulbasit.jpg", server: "https://server7.mp3quran.net/basit/" },
+            { id: "2", name: "مشاري راشد العفاسي", image: "images/alafasy.jpg", server: "https://server8.mp3quran.net/afs/" },
+            { id: "3", name: "سعد الغامدي", image: "images/ghamdi.jpg", server: "https://server7.mp3quran.net/s_gmd/" },
+            { id: "4", name: "محمود خليل الحصري", image: "images/husary.jpg", server: "https://server13.mp3quran.net/husr/" },
+            { id: "5", name: "ماهر المعيقلي", image: "images/maher.jpg", server: "https://server12.mp3quran.net/maher/" },
+            { id: "6", name: "محمد صديق المنشاوي", image: "images/minshawi.jpg", server: "https://server10.mp3quran.net/minsh/Almusshaf-Al-Mojawwad/" },
+            { id: "7", name: "محمد الطبلاوي", image: "images/tablaway.jpg", server: "https://server12.mp3quran.net/tblawi/" },
+            { id: "8", name: "محمد أيوب", image: "images/ayyoub.jpg", server: "https://server8.mp3quran.net/ayyub/" },
+            { id: "9", name: "محمد جبريل", image: "images/jibreel.jpg", server: "https://server8.mp3quran.net/jbrl/" },
+            { id: "10", name: "سعود الشريم", image: "images/shuraym.jpg", server: "https://server7.mp3quran.net/shur/" },
+            { id: "11", name: "صلاح البدير", image: "images/budair.jpg", server: "https://server6.mp3quran.net/s_bud/" },
+            { id: "12", name: "عبد الله مطرود", image: "images/matroud.jpg", server: "https://server8.mp3quran.net/mtrod/" },
+            { id: "13", name: "محمد عبد الكريم", image: "images/abdulkareem.jpg", server: "https://server12.mp3quran.net/m_krm/" },
+            { id: "14", name: "محمود علي البنا", image: "images/albanna.jpg", server: "https://server8.mp3quran.net/bna/" },
+            { id: "16", name: "ناصر القطامي", image: "images/qatami.jpg", server: "https://server6.mp3quran.net/qtm/" },
+            { id: "17", name: "أحمد العجمي", image: "images/ajmy.jpg", server: "https://server10.mp3quran.net/ajm/" },
+            { id: "18", name: "فارس عباد", image: "images/fares.jpg", server: "https://server8.mp3quran.net/frs_a/" },
+            { id: "19", name: "مصطفى إسماعيل", image: "images/mustafa.jpg", server: "https://server8.mp3quran.net/mustafa/Almusshaf-Al-Mojawwad/" },
+            { id: "20", name: "محمد رفعت", image: "images/refaat.jpg", server: "https://server14.mp3quran.net/refat/" },
+            { id: "21", name: "علي جابر", image: "images/alijaber.jpg", server: "https://server11.mp3quran.net/a_jbr/" },
+            { id: "254", name: "بدر التركي", image: "images/badr.jpg", server: "https://server10.mp3quran.net/bader/Rewayat-Hafs-A-n-Assem/" },
+            { id: "23", name: "هيثم الدخين", image: "images/haitham.jpg", server: "https://server16.mp3quran.net/h_dukhain/Rewayat-Hafs-A-n-Assem/" },
+            { id: "37", name: "شعبان الصياد", image: "images/shaaban.jpg", server: "https://server11.mp3quran.net/shaban/" },
+            { id: "25", name: "يونس إسويلص", image: "images/younes.jpg", server: "https://server16.mp3quran.net/souilass/Rewayat-Warsh-A-n-Nafi/" }
+        ];
+
+        async function initReciters() {
+            try {
+                // 1. Fetch Surah Meta
+                const metaRes = await fetch("https://api.alquran.cloud/v1/surah");
+                const metaData = await metaRes.json();
+                quranMeta = metaData.data;
+                populateSurahSelect();
+                populateQuickGrid();
+
+                // 2. Use Static Reciters List
+                allReciters = recitersList;
+
+                renderReciterCards(allReciters);
+                populateReciterSelect();
+
+            } catch (e) {
+                console.error("Failed to load data", e);
+                document.getElementById('recitersList').innerHTML = '<div class="col-span-full text-center text-red-400">فشل تحميل القراء. يرجى التحقق من الاتصال.</div>';
+            }
+
+            // Audio Events
+            document.getElementById('playReciterBtn').onclick = togglePlay;
+            document.getElementById('reciterRewindBtn').onclick = () => audio.currentTime -= 5;
+            document.getElementById('reciterForwardBtn').onclick = () => audio.currentTime += 5;
+            document.getElementById('progressBarContainer').onclick = seek;
+
+            document.querySelectorAll('.rate-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    audio.playbackRate = parseFloat(e.target.dataset.rate);
+                    document.querySelectorAll('.rate-btn').forEach(b => b.classList.remove('bg-ramadan-gold/20', 'text-ramadan-gold'));
+                    e.target.classList.add('bg-ramadan-gold/20', 'text-ramadan-gold');
+                }
+            });
+
+            document.getElementById('reciterSelect').onchange = (e) => {
+                const r = allReciters.find(x => x.id == e.target.value);
+                if (!r) return;
+
+                selectReciterUI(r);
+                killAudio();   // 🔥 يقتل الصوت القديم
+                playSura();    // 🔥 يشغّل الجديد
+            };
+
+            document.getElementById('surahSelect').onchange = () => {
+                playSura();
+            };
+
+            audio.ontimeupdate = updateProgress;
+            audio.onended = () => document.getElementById('reciterPlayIcon').className = 'fas fa-play text-xl';
+            audio.onplay = () => document.getElementById('reciterPlayIcon').className = 'fas fa-pause text-xl';
+            audio.onpause = () => document.getElementById('reciterPlayIcon').className = 'fas fa-play text-xl';
+        }
+
+        function renderReciterCards(list) {
+            const container = document.getElementById('recitersList');
+            container.innerHTML = '';
+
+            list.forEach(rec => {
+                const div = document.createElement('div');
+                div.className = "glass-effect rounded-xl p-4 text-center cursor-pointer hover:bg-white/5 transition-all group";
+                div.onclick = () => selectReciter(rec);
+                div.innerHTML = `
+                    <div class="w-20 h-20 mx-auto mb-3 rounded-full bg-ramadan-gold/10 flex items-center justify-center overflow-hidden border-2 border-transparent group-hover:border-ramadan-gold transition-all">
+                        <img src="${rec.image}" alt="${rec.name}" loading="lazy" decoding="async" class="w-full h-full object-cover">
+                    </div>
+                    <h4 class="font-bold text-ramadan-gold text-sm group-hover:text-white transition-colors line-clamp-1">${rec.name}</h4>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function filterReciters() {
+            const query = document.getElementById('reciterSearch').value.toLowerCase();
+            const filtered = allReciters.filter(r => r.name.toLowerCase().includes(query));
+            renderReciterCards(filtered);
+        }
+
+        function populateReciterSelect() {
+            const sel = document.getElementById('reciterSelect');
+            sel.innerHTML = '';
+            allReciters.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r.id;
+                opt.textContent = r.name;
+                sel.appendChild(opt);
+            });
+        }
+
+        function populateSurahSelect() {
+            const sel = document.getElementById('surahSelect');
+            quranMeta.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.number;
+                opt.textContent = `${s.number}. ${s.name}`;
+                sel.appendChild(opt);
+            });
+        }
+
+        function populateQuickGrid() {
+            const grid = document.getElementById('quickSuraGrid');
+            let html = '';
+            for (let i = 1; i <= 114; i++) {
+                html += `<button onclick="document.getElementById('surahSelect').value=${i}; playSura();" class="p-1 rounded bg-white/5 hover:bg-ramadan-gold text-xs transition-colors h-8 w-8 flex items-center justify-center">${i}</button>`;
+            }
+            grid.innerHTML = html;
+        }
+
+        function selectReciter(rec) {
+            // أظهر المشغل
+            document.getElementById('reciterPlayer').classList.remove('hidden');
+
+            // حدّث الواجهة
+            selectReciterUI(rec);
+
+            // حدّث الـ select
+            document.getElementById('reciterSelect').value = rec.id;
+
+            // 🔥 اقفل أي صوت شغال
+            killAudio();
+
+            // 🔥 شغّل الشيخ الجديد مباشرة
+            playSura();
+        }
+
+        function selectReciterUI(rec) {
+            document.getElementById('reciterSelect').value = rec.id;
+            document.getElementById('reciterName').textContent = rec.name;
+            document.getElementById('reciterImg').src = rec.image;
+        }
+
+        function playSura() {
+            const recId = document.getElementById('reciterSelect').value;
+            const suraNum = document.getElementById('surahSelect').value || 1;
+            if (!recId) return;
+
+            const reciter = allReciters.find(r => r.id == recId);
+            const sura = quranMeta.find(s => s.number == suraNum);
+            if (!reciter) return;
+
+            // ✅ اقفل أي صوت قديم نهائيًا
+            killAudio();
+
+            document.getElementById('currentSurahName').textContent =
+                sura ? `سورة ${sura.name}` : `سورة ${suraNum}`;
+
+            const padded = String(suraNum).padStart(3, '0');
+            audio.src = `${reciter.server}${padded}.mp3`;
+
+            audio.load();
+            audio.play().catch(err => console.error(err));
+        }
+
+        function stopAudio() {
+            audio.pause();
+            audio.currentTime = 0;
+        }
+
+        function togglePlay() {
+            if (audio.paused) {
+                if (!audio.src) { playSura(); return; }
+                audio.play();
+            } else {
+                audio.pause();
+            }
+        }
+
+        function updateProgress() {
+            if (!audio.duration) return;
+            const pct = (audio.currentTime / audio.duration) * 100;
+            document.getElementById('reciterProgress').style.width = pct + '%';
+            document.getElementById('currentTime').textContent = fmtTime(audio.currentTime);
+            document.getElementById('durationTime').textContent = fmtTime(audio.duration);
+        }
+
+        function seek(e) {
+            if (!audio.duration) return;
+            const cnt = document.getElementById('progressBarContainer');
+            const rect = cnt.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const width = rect.width;
+            const pct = clickX / width;
+            audio.currentTime = pct * audio.duration;
+        }
+
+        function fmtTime(s) {
+            if (isNaN(s)) return "00:00";
+            const m = Math.floor(s / 60);
+            const sec = Math.floor(s % 60);
+            return `${m}:${sec.toString().padStart(2, '0')}`;
+        }
+    </script>
+    <div id="global-player"></div>
+</body>
+
+</html>

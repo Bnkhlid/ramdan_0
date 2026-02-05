@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>رمضان كريم | مساعد الحفظ</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;400;500;700;800&family=Scheherazade+New:wght@400;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        
+    
+        <script src="js/main.js"></script>
+    <link rel="stylesheet" href="css/style.css?v=darkmode1">
+    <style>
+        .hidden-word {
+            background-color: rgba(251, 191, 36, 0.1);
+            color: transparent;
+            border-bottom: 2px dashed rgba(251, 191, 36, 0.5);
+            cursor: pointer;
+            border-radius: 4px;
+            padding: 0 4px;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .hidden-word:hover {
+            background-color: rgba(251, 191, 36, 0.2);
+        }
+
+        .hidden-word.revealed {
+            color: #fbbf24;
+            background-color: transparent;
+            border-bottom: none;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .shimmer {
+            animation: shimmer 2s infinite;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
+        }
+    </style>
+</head>
+
+<body class="bg-ramadan-dark text-white font-tajawal">
+    <div id="nav-placeholder"></div>
+<section class="py-24 min-h-screen relative overflow-hidden">
+        <!-- Background Elements -->
+        <div class="absolute inset-0 stars opacity-30"></div>
+        <div class="absolute inset-0 islamic-pattern opacity-10"></div>
+
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="text-center mb-8">
+                <span class="text-ramadan-gold text-sm font-bold tracking-wider">وَلَقَدْ يَسَّرْنَا الْقُرْآنَ
+                    لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍ</span>
+                <h2 class="text-3xl lg:text-5xl font-bold mt-2 font-amiri text-white">مساعد الحفظ</h2>
+                <p class="text-gray-400 mt-2">اختبر حفظك بإخفاء بعض الكلمات من الآيات</p>
+            </div>
+
+            <div class="max-w-4xl mx-auto">
+                <!-- Control Bar -->
+                <div class="glass-effect rounded-2xl p-6 mb-6 flex flex-col gap-6">
+                    <div class="flex flex-col md:flex-row items-center gap-4 justify-between">
+                        <!-- Select Surah -->
+                        <div class="w-full md:w-1/2">
+                            <label class="block text-gray-400 text-sm mb-2">اختر السورة:</label>
+                            <select id="suraSelect"
+                                class="w-full p-3 rounded-xl bg-ramadan-dark border border-ramadan-gold/30 text-white focus:outline-none focus:border-ramadan-gold">
+                                <option value="">جاري التحميل...</option>
+                            </select>
+                        </div>
+
+                        <!-- Difficulty -->
+                        <div class="w-full md:w-1/2">
+                            <label class="block text-gray-400 text-sm mb-2">مستوى الاختبار:</label>
+                            <div class="flex bg-ramadan-dark rounded-xl p-1 border border-ramadan-gold/20">
+                                <button onclick="setDifficulty('easy')" id="btn-easy"
+                                    class="flex-1 py-2 rounded-lg text-sm transition-all bg-ramadan-gold text-ramadan-dark font-bold">10%</button>
+                                <button onclick="setDifficulty('medium')" id="btn-medium"
+                                    class="flex-1 py-2 rounded-lg text-sm transition-all text-gray-400 hover:text-white">30%</button>
+                                <button onclick="setDifficulty('hard')" id="btn-hard"
+                                    class="flex-1 py-2 rounded-lg text-sm transition-all text-gray-400 hover:text-white">50%</button>
+                                <button onclick="setDifficulty('expert')" id="btn-expert"
+                                    class="flex-1 py-2 rounded-lg text-sm transition-all text-gray-400 hover:text-white">80%</button>
+                                <button onclick="setDifficulty('master')" id="btn-master"
+                                    class="flex-1 py-2 rounded-lg text-sm transition-all text-gray-400 hover:text-white">100%</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center border-t border-white/10 pt-4">
+                        <div class="text-sm text-gray-400">
+                            <i class="fas fa-info-circle ml-1"></i> اضغط على الكلمة المخفية لإظهارها
+                        </div>
+                        <button onclick="regenerateTest()"
+                            class="px-6 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all flex items-center gap-2">
+                            <i class="fas fa-sync-alt"></i> تحديث الإخفاء
+                        </button>
+                    </div>
+                    <!-- Live Transcript -->
+                    <div id="liveTranscript"
+                        class="hidden mt-4 p-4 bg-black/30 rounded-xl border border-ramadan-gold/30">
+                        <div class="text-xs text-gray-400 mb-2">ما سمعته:</div>
+                        <div id="transcriptText" class="text-ramadan-gold font-amiri text-lg min-h-[60px]"></div>
+                    </div>
+
+                    <!-- Statistics Panel -->
+                    <div id="statsPanel" class="mt-6 border-t border-white/10 pt-6 hidden">
+                        <div class="flex justify-between items-end mb-2">
+                            <div>
+                                <h3 class="text-ramadan-gold font-bold text-lg mb-1">إحصائيات السورة</h3>
+                                <p class="text-xs text-gray-400">تابع تقدمك في استرجاع الكلمات المخفية</p>
+                            </div>
+                            <div class="text-left">
+                                <span id="statsPercentage" class="text-3xl font-bold text-white">0%</span>
+                                <span class="text-xs text-gray-400 block">نسبة الإتقان</span>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="h-4 bg-black/40 rounded-full overflow-hidden mb-4 border border-white/5">
+                            <div id="statsProgressBar"
+                                class="h-full bg-gradient-to-r from-ramadan-gold to-yellow-600 w-0 transition-all duration-1000 ease-out relative">
+                                <div class="absolute inset-0 bg-white/20 shimmer"></div>
+                            </div>
+                        </div>
+
+                        <!-- Counters -->
+                        <div class="grid grid-cols-3 gap-4 text-center">
+                            <div class="bg-white/5 rounded-lg p-3">
+                                <div id="statsHiddenCount" class="text-xl font-bold text-white">0</div>
+                                <div class="text-xs text-gray-400">كلمات مخفية</div>
+                            </div>
+                            <div class="bg-white/5 rounded-lg p-3">
+                                <div id="statsRevealedCount" class="text-xl font-bold text-green-400">0</div>
+                                <div class="text-xs text-gray-400">تم كشفها</div>
+                            </div>
+                            <div class="bg-white/5 rounded-lg p-3">
+                                <div id="statsRemainingCount" class="text-xl font-bold text-yellow-400">0</div>
+                                <div class="text-xs text-gray-400">متبقية</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Area -->
+                <div id="quizContainer" class="min-h-[400px] glass-effect rounded-2xl p-6 md:p-10 relative">
+                    <div id="loading"
+                        class="absolute inset-0 flex flex-col items-center justify-center bg-ramadan-dark/80 z-10 hidden">
+                        <div class="loader mb-4"></div>
+                        <p class="text-ramadan-gold animate-pulse">جاري إعداد الاختبار...</p>
+                    </div>
+
+                    <div id="bismillah" class="text-center text-3xl font-amiri text-ramadan-gold mb-8 hidden">
+                        بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
+                    </div>
+
+                    <div id="versesContent" class="quran-text text-center space-y-8" style="font-size: 28px;">
+                        <div class="flex flex-col items-center justify-center h-64 text-gray-500">
+                            <i class="fas fa-brain text-6xl mb-4 opacity-30"></i>
+                            <p class="text-xl">اختر سورة للبدء في الاختبار</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="flex justify-between mt-6">
+                    <button onclick="prevSura()"
+                        class="px-6 py-3 rounded-xl bg-white/5 hover:bg-ramadan-gold/20 flex items-center gap-2 transition-all">
+                        <i class="fas fa-arrow-right"></i> السورة السابقة
+                    </button>
+                    <button onclick="nextSura()"
+                        class="px-6 py-3 rounded-xl bg-white/5 hover:bg-ramadan-gold/20 flex items-center gap-2 transition-all">
+                        السورة التالية <i class="fas fa-arrow-left"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+<div id="footer-placeholder"></div>
+
+    <script>
+        let quranData = [];
+        let currentSuraIndex = 0;
+        let difficulty = 0.1; // Default Easy
+
+        document.addEventListener("DOMContentLoaded", () => {
+            injectNav('quiz');
+            injectFooter();
+            fetchQuran();
+        });
+
+        async function fetchQuran() {
+            try {
+                // Reuse the same API to be efficient
+                const savedData = localStorage.getItem('quran_data_cache');
+                if (savedData) {
+                    quranData = JSON.parse(savedData);
+                    populateSelect();
+                } else {
+                    const res = await fetch("https://api.alquran.cloud/v1/quran/quran-uthmani");
+                    const data = await res.json();
+                    quranData = data.data.surahs;
+                    localStorage.setItem('quran_data_cache', JSON.stringify(quranData));
+                    populateSelect();
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'خطأ',
+                    text: 'فشل تحميل بيانات المصحف. تأكد من اتصالك بالإنترنت.',
+                    background: '#0f172a', color: '#fff'
+                });
+            }
+        }
+
+        function populateSelect() {
+            const select = document.getElementById("suraSelect");
+            select.innerHTML = '<option value="">اختر السورة...</option>';
+            quranData.forEach((sura, index) => {
+                const opt = document.createElement("option");
+                opt.value = index;
+                opt.textContent = `${sura.number}. ${sura.name}`;
+                select.appendChild(opt);
+            });
+
+            select.addEventListener("change", (e) => {
+                if (e.target.value !== "") loadSura(parseInt(e.target.value));
+            });
+
+            // Restore previous state
+            loadCurrentState();
+        }
+
+        function setDifficulty(level, isRestoring = false) {
+            // Update UI
+            document.querySelectorAll('[id^="btn-"]').forEach(btn => {
+                btn.className = "flex-1 py-2 rounded-lg text-sm transition-all text-gray-400 hover:text-white";
+            });
+            const activeBtn = document.getElementById(`btn-${level}`);
+            activeBtn.className = "flex-1 py-2 rounded-lg text-sm transition-all bg-ramadan-gold text-ramadan-dark font-bold";
+
+            // Set Value
+            if (level === 'easy') difficulty = 0.1;
+            if (level === 'medium') difficulty = 0.3;
+            if (level === 'hard') difficulty = 0.5;
+            if (level === 'expert') difficulty = 0.8;
+            if (level === 'master') difficulty = 1.0;
+
+            // Only regenerate if this is a manual user action (not restoring from save)
+            if (!isRestoring && document.getElementById("suraSelect").value !== "") {
+                const suraNumber = quranData[currentSuraIndex].number;
+                // Clear saved progress to force new pattern generation with new difficulty
+                const key = `quiz_progress_sura_${suraNumber}`;
+                localStorage.removeItem(key);
+
+                renderTest(quranData[currentSuraIndex]);
+            }
+        }
+
+        function loadSura(index) {
+            currentSuraIndex = index;
+            document.getElementById("suraSelect").value = index;
+            const sura = quranData[index];
+
+            const bismillah = document.getElementById("bismillah");
+            if (sura.number === 9) bismillah.classList.add("hidden");
+            else bismillah.classList.remove("hidden");
+
+            renderTest(sura);
+        }
+
+        function renderTest(sura) {
+            const container = document.getElementById("versesContent");
+            container.innerHTML = "";
+
+            // Get saved progress and pattern for this surah
+            const savedProgress = loadProgress(sura.number);
+            let hiddenPattern = savedProgress.hiddenPattern;
+
+            // If no pattern exists, generate a new one
+            if (!hiddenPattern || hiddenPattern.length === 0) {
+                hiddenPattern = [];
+                let wordGlobalIndex = 0;
+
+                sura.ayahs.forEach((ayah) => {
+                    ayah.text.split(' ').forEach(() => {
+                        // Randomly decide if this word should be hidden
+                        if (Math.random() < difficulty) {
+                            hiddenPattern.push(wordGlobalIndex);
+                        }
+                        wordGlobalIndex++;
+                    });
+                });
+
+                // Save the new pattern
+                savedProgress.hiddenPattern = hiddenPattern;
+                saveProgress(sura.number, savedProgress);
+            }
+
+            let wordGlobalIndex = 0;
+            sura.ayahs.forEach((ayah, ayahIndex) => {
+                const div = document.createElement("div");
+                div.className = "relative border-b border-white/5 pb-6 last:border-0";
+
+                // Process text to hide words
+                const words = ayah.text.split(' ');
+                const processedText = words.map((word, wordIndex) => {
+                    const wordKey = `${ayahIndex}-${wordIndex}`;
+                    const wasRevealed = savedProgress.revealedWords.includes(wordKey);
+                    const shouldBeHidden = hiddenPattern.includes(wordGlobalIndex);
+
+                    wordGlobalIndex++;
+
+                    if (shouldBeHidden) {
+                        const revealedClass = wasRevealed ? ' revealed' : '';
+                        return `<span class="hidden-word${revealedClass}" data-ayah="${ayahIndex}" data-word="${wordIndex}" onclick="revealWord(this)">${word}</span>`;
+                    }
+                    return word;
+                }).join(' ');
+
+                div.innerHTML = `
+                    <div class="leading-loose font-amiri" dir="rtl">
+                        ${processedText}
+                        <span class="text-ramadan-gold text-sm mx-2 font-sans border border-ramadan-gold/30 rounded-full w-8 h-8 inline-flex items-center justify-center">${ayah.numberInSurah}</span>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            // Update stats UI
+            updateStatsUI(sura.number);
+
+            // Save current state
+            saveCurrentState();
+        }
+
+        function revealWord(element) {
+            // If already revealed, do nothing
+            if (element.classList.contains('revealed')) return;
+
+            element.classList.add('revealed');
+
+            // Save this word as revealed
+            const ayahIndex = element.getAttribute('data-ayah');
+            const wordIndex = element.getAttribute('data-word');
+            const wordKey = `${ayahIndex}-${wordIndex}`;
+
+            const suraNumber = quranData[currentSuraIndex].number;
+            const progress = loadProgress(suraNumber);
+
+            if (!progress.revealedWords.includes(wordKey)) {
+                progress.revealedWords.push(wordKey);
+                saveProgress(suraNumber, progress);
+                // Update stats immediately
+                updateStatsUI(suraNumber);
+            }
+        }
+
+        function updateStatsUI(suraNumber) {
+            const progress = loadProgress(suraNumber);
+            const hiddenPattern = progress.hiddenPattern || [];
+            const revealedWords = progress.revealedWords || [];
+
+            const totalHidden = hiddenPattern.length;
+            const totalRevealed = revealedWords.length;
+            const remaining = totalHidden - totalRevealed;
+            const percentage = totalHidden === 0 ? 100 : Math.round((totalRevealed / totalHidden) * 100);
+
+            // Show panel
+            const panel = document.getElementById('statsPanel');
+            if (panel) panel.classList.remove('hidden');
+
+            // Update counts
+            document.getElementById('statsHiddenCount').textContent = totalHidden;
+            document.getElementById('statsRevealedCount').textContent = totalRevealed;
+            document.getElementById('statsRemainingCount').textContent = remaining;
+            document.getElementById('statsPercentage').textContent = `${percentage}%`;
+
+            // Update progress bar width
+            document.getElementById('statsProgressBar').style.width = `${percentage}%`;
+
+            // Change color based on completion
+            const progressBar = document.getElementById('statsProgressBar');
+            if (percentage === 100) {
+                progressBar.className = "h-full bg-gradient-to-r from-green-500 to-emerald-600 w-0 transition-all duration-1000 ease-out relative";
+                if (totalHidden > 0) confettiEffect(); // Optional celebration
+            } else {
+                progressBar.className = "h-full bg-gradient-to-r from-ramadan-gold to-yellow-600 w-0 transition-all duration-1000 ease-out relative";
+            }
+            // Re-apply width because changing className might reset it in some browsers
+            setTimeout(() => {
+                if (progressBar) progressBar.style.width = `${percentage}%`;
+            }, 10);
+        }
+
+        function confettiEffect() {
+            // Simple confetti if SweetAlert is available
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+
+            const suraName = quranData[currentSuraIndex].name;
+            addActivity('fas fa-award', `أكملت تسميع ${suraName} بنجاح`, 'مساعد الحفظ');
+
+            Toast.fire({
+                icon: 'success',
+                title: '🎉 أحسنت! أكملت السورة بنجاح'
+            });
+        }
+
+        function saveProgress(suraNumber, progress) {
+            const key = `quiz_progress_sura_${suraNumber}`;
+            localStorage.setItem(key, JSON.stringify(progress));
+        }
+
+        function loadProgress(suraNumber) {
+            const key = `quiz_progress_sura_${suraNumber}`;
+            const saved = localStorage.getItem(key);
+
+            if (saved) {
+                return JSON.parse(saved);
+            }
+
+            return {
+                revealedWords: [],
+                hiddenPattern: [],
+                difficulty: difficulty
+            };
+        }
+
+        function saveCurrentState() {
+            const state = {
+                currentSuraIndex: currentSuraIndex,
+                difficulty: difficulty
+            };
+            localStorage.setItem('quiz_current_state', JSON.stringify(state));
+        }
+
+        function loadCurrentState() {
+            const saved = localStorage.getItem('quiz_current_state');
+            if (saved) {
+                const state = JSON.parse(saved);
+                difficulty = state.difficulty || 0.1;
+
+                // Update difficulty UI
+                const difficultyMap = {
+                    0.1: 'easy',
+                    0.3: 'medium',
+                    0.5: 'hard',
+                    0.8: 'expert',
+                    1.0: 'master'
+                };
+                const level = difficultyMap[difficulty] || 'easy';
+                setDifficulty(level, true);
+
+                // Load last surah if available
+                if (state.currentSuraIndex !== undefined && quranData.length > 0) {
+                    loadSura(state.currentSuraIndex);
+                }
+            }
+        }
+
+        function regenerateTest() {
+            if (quranData[currentSuraIndex]) {
+                // Clear saved progress for this surah
+                const suraNumber = quranData[currentSuraIndex].number;
+                const key = `quiz_progress_sura_${suraNumber}`;
+                localStorage.removeItem(key);
+
+                // Re-render
+                renderTest(quranData[currentSuraIndex]);
+            }
+        }
+
+        function nextSura() {
+            if (currentSuraIndex < 113) loadSura(currentSuraIndex + 1);
+        }
+
+        function prevSura() {
+            if (currentSuraIndex > 0) loadSura(currentSuraIndex - 1);
+        }
+    </script>
+    <div id="global-player"></div>
+</body>
+
+</html>
